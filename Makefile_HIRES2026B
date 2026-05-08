@@ -53,9 +53,9 @@ all: $(foreach band,$(BANDS),$(DATE_DIR)/$(band)/plan-night-complete)
 		echo "  $(DATE_DIR)/$$band/"; \
 	done
 	@echo "📝 Combining all band logs..."
-	@$(MAKE) combine_logs
+	@$(MAKE) -f $(lastword $(MAKEFILE_LIST)) combine_logs DATE=$(DATE)
 	@echo "🔍 Checking night plans..."
-	@$(MAKE) check_night_plans
+	@$(MAKE) -f $(lastword $(MAKEFILE_LIST)) check_night_plans DATE=$(DATE)
 
 # Final target for each band - depends on plan-night completion
 $(DATE_DIR)/%/plan-night-complete: $(DATE_DIR)/%/plan-night-run

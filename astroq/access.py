@@ -191,10 +191,21 @@ class Access:
         self.is_inter = np.ones((self.ntargets, self.nnights, self.nslots),dtype=bool)
         for itarget in range(self.ntargets):
             name = self.request_frame.iloc[itarget]['unique_id']
-            if name in self.past_history and self.request_frame.iloc[itarget]['tau_inter'] > 1:
-                inight_start = self.all_dates_dict[self.past_history[name].date_last_observed]
-                inight_stop = min(inight_start + self.request_frame.iloc[itarget]['tau_inter'],self.nnights)
-                self.is_inter[itarget,inight_start:inight_stop,:] = False
+            tau_inter_raw = pd.to_numeric(self.request_frame.iloc[itarget]['tau_inter'], errors='coerce')
+            if name not in self.past_history or pd.isna(tau_inter_raw) or tau_inter_raw <= 1:
+                continue
+
+            last_observed_date = str(self.past_history[name].date_last_observed)
+            if last_observed_date not in self.all_dates_dict:
+                # Observation may be outside the modeled semester window.
+                continue
+
+            inight_start = int(self.all_dates_dict[last_observed_date])
+            cadence_nights = int(np.ceil(float(tau_inter_raw)))
+            inight_stop = min(inight_start + cadence_nights, int(self.nnights))
+
+            if inight_start < inight_stop:
+                self.is_inter[itarget, inight_start:inight_stop, :] = False
 
     def compute_custom(self):
         """
